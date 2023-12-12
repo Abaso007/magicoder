@@ -78,7 +78,7 @@ def map_dataset(
     assert len(input_ids) == len(labels)
     for input_id_batch, label_batch in zip(input_ids, labels):
         assert len(input_id_batch) == len(label_batch)
-    print(context.decode(DecodingConfig.default(), input_ids[0:])[0])
+    print(context.decode(DecodingConfig.default(), input_ids[:])[0])
     return {
         "input_ids": input_ids,
         "labels": labels,

@@ -266,14 +266,13 @@ if __name__ == "__main__":
 
     logging.basicConfig(level=logging.INFO)
 
-    time_measures = {}
     start_time = time.time()
 
     B, R = optimal_param(args.threshold, args.num_perm)
     HASH_RANGES = [(i * R, (i + 1) * R) for i in range(B)]
     HASH_TABLES: list = [defaultdict(set) for _ in range(B)]
 
-    time_measures["load_dataset"] = time.time()
+    time_measures = {"load_dataset": time.time()}
     ds = load_dataset(
         "json",
         args.config,

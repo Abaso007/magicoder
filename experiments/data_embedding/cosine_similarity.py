@@ -80,45 +80,66 @@ class CosineSimilarityAnalysis:
         sorted_keys_evol = sorted(percentage_counts_evol.keys())
         sorted_keys_codealpaca = sorted(percentage_counts_codealpaca.keys())
 
-        color1 = (59/256, 117/256, 175/256)  
-        color2 = (82/256, 159/256, 64/256)  
+        color1 = (59/256, 117/256, 175/256)
+        color2 = (82/256, 159/256, 64/256)
         color3 = (239/256, 139/256, 54/256) 
 
-        color4 = (0/256, 60/256, 146/256)  
-        color5 = (0/256, 146/256, 10/256) 
+        color4 = (0/256, 60/256, 146/256)
+        color5 = (0/256, 146/256, 10/256)
         color6 = (230/256, 120/256, 0/37)   
 
         alpha=0.33
 
-        plt.plot(sorted_keys_codealpaca, [percentage_counts_codealpaca[k] for k in sorted_keys_codealpaca], color=color2, alpha=1, label=r'Self-Instruct; Avg Score: ' + f'{avg_score_codealpaca:.3f}', zorder=3)
+        plt.plot(
+            sorted_keys_codealpaca,
+            [percentage_counts_codealpaca[k] for k in sorted_keys_codealpaca],
+            color=color2,
+            alpha=1,
+            label=f'Self-Instruct; Avg Score: {avg_score_codealpaca:.3f}',
+            zorder=3,
+        )
         plt.fill_between(sorted_keys_codealpaca, [percentage_counts_codealpaca[k] for k in sorted_keys_codealpaca], color=color5, alpha=alpha, zorder=2)
 
-        plt.plot(sorted_keys_evol, [percentage_counts_evol[k] for k in sorted_keys_evol], color=color1, alpha=1, label=r'Evol-Instruct; Avg Score: ' + f'{avg_score_evol:.3f}', zorder=3)
+        plt.plot(
+            sorted_keys_evol,
+            [percentage_counts_evol[k] for k in sorted_keys_evol],
+            color=color1,
+            alpha=1,
+            label=f'Evol-Instruct; Avg Score: {avg_score_evol:.3f}',
+            zorder=3,
+        )
         plt.fill_between(sorted_keys_evol, [percentage_counts_evol[k] for k in sorted_keys_evol], color=color4, alpha=alpha, zorder=2)
 
-        plt.plot(sorted_keys_oss, [percentage_counts_oss[k] for k in sorted_keys_oss], color=color3, alpha=1, label=r'OSS-Instruct; Avg Score: ' + f'{avg_score_oss:.3f}', zorder=3)
+        plt.plot(
+            sorted_keys_oss,
+            [percentage_counts_oss[k] for k in sorted_keys_oss],
+            color=color3,
+            alpha=1,
+            label=f'OSS-Instruct; Avg Score: {avg_score_oss:.3f}',
+            zorder=3,
+        )
         plt.fill_between(sorted_keys_oss, [percentage_counts_oss[k] for k in sorted_keys_oss], color=color6, alpha=alpha, zorder=2)
 
 
         plt.xlabel("Cosine Similarity Score", fontsize=15)
         plt.ylabel("Percentage", fontsize=15)
         plt.xlim(0, 0.5)
-        plt.ylim(bottom=0)  
+        plt.ylim(bottom=0)
         plt.xticks(np.arange(0, 0.55, 0.1))
-        plt.yticks(np.arange(0, 0.16, 0.02), [f'{i:.2f}' for i in np.arange(0, 0.16, 0.02)]) 
+        plt.yticks(np.arange(0, 0.16, 0.02), [f'{i:.2f}' for i in np.arange(0, 0.16, 0.02)])
         plt.tick_params(axis='both', labelsize=14)
 
-        plt.axvline(x=avg_score_codealpaca, color='Forestgreen', linestyle='dotted')  
-        plt.axvline(x=avg_score_evol, color='royalblue', linestyle='dotted') 
-        plt.axvline(x=avg_score_oss, color='tomato', linestyle='dotted')  
+        plt.axvline(x=avg_score_codealpaca, color='Forestgreen', linestyle='dotted')
+        plt.axvline(x=avg_score_evol, color='royalblue', linestyle='dotted')
+        plt.axvline(x=avg_score_oss, color='tomato', linestyle='dotted')
         plt.legend(prop={'size': 10})
         plt.tight_layout()
         plt.savefig('HE_similarity_comparison.png')
 
 class DataLoader:
-    def load_data_oss(file_paths):
+    def load_data_oss(self):
         all_problem_solutions = []
-        for file_path in file_paths:
+        for file_path in self:
             with open(file_path, 'r') as file:
                 for line in file:
                     line = line.strip()
@@ -127,13 +148,13 @@ class DataLoader:
                     data = json.loads(line)
                     problem = data.get('problem', '')
                     solution = data.get('solution', '')
-                    combined_text = problem + " " + solution
+                    combined_text = f"{problem} {solution}"
                     all_problem_solutions.append(combined_text)
         return all_problem_solutions
 
-    def load_data_evol(file_paths):
+    def load_data_evol(self):
         all_problem_solutions = []
-        for file_path in file_paths:
+        for file_path in self:
             with open(file_path, 'r') as file:
                 for line in file:
                     line = line.strip()
@@ -142,13 +163,13 @@ class DataLoader:
                     data = json.loads(line)
                     problem = data.get('instruction', '')
                     solution = data.get('output', '')
-                    combined_text = problem + " " + solution
+                    combined_text = f"{problem} {solution}"
                     all_problem_solutions.append(combined_text)
         return all_problem_solutions
 
-    def load_data_codealpaca(file_paths):
+    def load_data_codealpaca(self):
         all_problem_solutions = []
-        for file_path in file_paths:
+        for file_path in self:
             with open(file_path, 'r') as file:
                 for line in file:
                     line = line.strip()
@@ -157,7 +178,7 @@ class DataLoader:
                     data = json.loads(line)
                     problem = data.get('instruction', '')
                     solution = data.get('response', '')
-                    combined_text = problem + " " + solution
+                    combined_text = f"{problem} {solution}"
                     all_problem_solutions.append(combined_text)
         return all_problem_solutions
 

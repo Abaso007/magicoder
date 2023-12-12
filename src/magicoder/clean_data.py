@@ -126,7 +126,7 @@ def save_analysis(chosen_data: list[dict], rejected_data: list[dict], output_dir
     for d in rejected_data:
         rejected_data_dict.setdefault(d["lang"], []).append(d)
     all_langs = set(chosen_data_dict.keys()) | set(rejected_data_dict.keys())
-    all_reasons = set(d["reason"] for d in rejected_data)
+    all_reasons = {d["reason"] for d in rejected_data}
     # - How many data are filtered out for each language?
     # - How many data are filtered out for each reason?
     analysis_dict = {

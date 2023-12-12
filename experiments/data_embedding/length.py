@@ -19,8 +19,7 @@ class TokenLengthAnalysis:
         for file_path in self.file_paths:
             with open(file_path, 'r') as file:
                 for line in file:
-                    line = line.strip()
-                    if line:
+                    if line := line.strip():
                         data = json.loads(line)
                         key = type if type in data else None
                         text = data[key]
@@ -30,9 +29,9 @@ class TokenLengthAnalysis:
 
     def plot_data(self):
         fig, ax = plt.subplots(figsize=(4.8, 3))
+        width = 20
         for type in self.types:
             data = self.load_data(type)
-            width = 20
             token_length = [(length // width) * width for length in data]
             token_length_counts = Counter(token_length)
             x_values = sorted(list(token_length_counts.keys()))

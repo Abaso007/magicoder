@@ -50,9 +50,7 @@ def load_mbpp():
     TEST_IDS = list(range(11, 511))
     data = []
     with open(MBPP_PATH) as f:
-        for line in f:
-            data.append(json.loads(line))
-
+        data.extend(json.loads(line) for line in f)
     data = [sample for sample in data if sample["task_id"] in TEST_IDS]
 
     assert len(data) == 500
@@ -89,8 +87,7 @@ def extract_docstring(prompt: str) -> str:
 
 def human_eval_docstrings():
     ds = load_dataset("openai_humaneval", split="test")
-    docstrings = [extract_docstring(v["prompt"]) for v in ds]
-    return docstrings
+    return [extract_docstring(v["prompt"]) for v in ds]
 
 
 def apps_solutions():
@@ -129,15 +126,13 @@ def multipl_e_docstrings():
     src_datas = ["humaneval", "mbpp"]
     variations = ["", "-remove"]
     data = []
-    for lang in languages:
-        for src_data in src_datas:
-            for variation in variations:
-                if src_data == "mbpp" and variation == "-remove":
-                    continue
-                ds = load_dataset(
-                    "nuprl/MultiPL-E", f"{src_data}-{lang}{variation}", split="test"
-                )
-                data += [sample["prompt"].strip() for sample in ds]
+    for lang, src_data, variation in itertools.product(languages, src_datas, variations):
+        if src_data == "mbpp" and variation == "-remove":
+            continue
+        ds = load_dataset(
+            "nuprl/MultiPL-E", f"{src_data}-{lang}{variation}", split="test"
+        )
+        data += [sample["prompt"].strip() for sample in ds]
     return data
 
 
