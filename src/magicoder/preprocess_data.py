@@ -29,9 +29,7 @@ def map_evol_instruct(example: dict) -> dict:
 
 
 def form_codealpaca_instruction(instruction: str, input: str) -> str:
-    if input.strip() == "":
-        return instruction
-    return f"{instruction}\nInput: {input}"
+    return instruction if not input.strip() else f"{instruction}\nInput: {input}"
 
 
 def map_codealpaca(example: dict) -> dict:
@@ -51,7 +49,7 @@ def map_src_instruct(example: dict) -> dict:
         SRC_INSTRUCT_INSTRUCTION_PROMPT.format(problem=problem)
         for problem in example["problem"]
     ]
-    keys = [key for key in example.keys() if key not in ["problem", "solution"]]
+    keys = [key for key in example if key not in ["problem", "solution"]]
     kwargs = {key: example[key] for key in keys}
     return dict(instruction=instructions, response=example["solution"], **kwargs)
 

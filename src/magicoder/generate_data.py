@@ -80,8 +80,7 @@ def extract_seed_code(args: Args, document: str) -> str:
     lines = document.splitlines(keepends=True)
     start_index = random.choice(range(len(lines)))
     n_lines_to_consider = random.randint(args.min_lines, args.max_lines)
-    code = "".join(lines[start_index : start_index + n_lines_to_consider])
-    return code
+    return "".join(lines[start_index : start_index + n_lines_to_consider])
 
 
 def parse_problem_solution(response_text: str) -> tuple[str, str] | None:

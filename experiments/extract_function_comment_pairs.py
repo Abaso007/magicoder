@@ -94,7 +94,7 @@ def main(args):
     parsers = {}
     lib_folder = Path(args.treesitter_path)
     for lang in language_list:
-        lib_path = lib_folder.joinpath(lang+".so")
+        lib_path = lib_folder.joinpath(f"{lang}.so")
         language = Language(lib_path, lang.replace("csharp", "c_sharp"))
         parser = Parser()
         parser.set_language(language)
@@ -105,14 +105,11 @@ def main(args):
 
     function_comment_pairs = []
     success = 0
-    if args.use_cover == "True":
-        use_cover = True
-    else:
-        use_cover = False
+    use_cover = args.use_cover == "True"
     for snippet in tqdm(dataset_raw):
         snippet = json.loads(snippet)
         LANG = snippet['lang']
-        if snippet['lang'] == "shell":
+        if LANG == "shell":
             LANG = "bash"
         # if LANG == "csharp" and snippet['max_stars_repo_path'].endswith(".cshtml"):
         #     continue
@@ -148,10 +145,19 @@ def main(args):
                     comment_groups.append([comment_idx])
             comments = []
             for comment_group in comment_groups:
-                comment_dict = {"content": "\n".join([comments_sorted[comment_idx]["content"] for comment_idx in comment_group])}
-                comment_dict["start_byte"] = comments_sorted[comment_group[0]]["start_byte"]
-                comment_dict["end_byte"] = comments_sorted[comment_group[-1]]["end_byte"]
-                comment_dict["range"] = []
+                comment_dict = {
+                    "content": "\n".join(
+                        [
+                            comments_sorted[comment_idx]["content"]
+                            for comment_idx in comment_group
+                        ]
+                    ),
+                    "start_byte": comments_sorted[comment_group[0]][
+                        "start_byte"
+                    ],
+                    "end_byte": comments_sorted[comment_group[-1]]["end_byte"],
+                    "range": [],
+                }
                 for comment_idx in comment_group:
                     comment_dict["range"] += comments_sorted[comment_idx]["range"]
                 comments.append(comment_dict)
@@ -170,34 +176,37 @@ def main(args):
         assert content_lines[seed_start_line-1:seed_end_line] == seed_lines
         seed_range = list(range(seed_start_line, seed_end_line+1))
 
-        # extract covered methods
-        methods_covered = []
-        for method in methods:
-            if not set(method['range']).isdisjoint(seed_range):
-                methods_covered.append(method)
-        
+        methods_covered = [
+            method
+            for method in methods
+            if not set(method['range']).isdisjoint(seed_range)
+        ]
         # extract docstring for covered methods
         for method in methods:
-            if use_cover:
-                if method not in methods_covered:
-                    continue
-            else:
-                if method in methods_covered:
-                    continue
+            if (
+                use_cover
+                and method not in methods_covered
+                or not use_cover
+                and method in methods_covered
+            ):
+                continue
             method["docstring"] = ''
             if LANG == "python":
                 for block_node in method["node"].children:
                     if block_node.type == 'block':
-                        docstring_node = [node for node in block_node.children if
-                                node.type == 'expression_statement' and node.children[0].type == 'string']
-                        if len(docstring_node) > 0:
+                        if docstring_node := [
+                            node
+                            for node in block_node.children
+                            if node.type == 'expression_statement'
+                            and node.children[0].type == 'string'
+                        ]:
                             docstring_node_extracted = docstring_node[0]
                             docstring = code[docstring_node_extracted.start_byte : docstring_node_extracted.end_byte].decode('UTF-8')
                             method["docstring"] = get_docstring_summary(strip_c_style_comment_delimiters(docstring.strip().strip('"').strip("'"))).strip()
                             success += 1
             else:
                 comments_above = [comment for comment in comments if comment['range'][-1] < method['range'][0]]
-                if len(comments_above) == 0:
+                if not comments_above:
                     continue
                 comments_above_close = comments_above[-1]
                 comment_method_interval = code[comments_above_close['end_byte']:method['start_byte']].decode('UTF-8')
@@ -205,16 +214,17 @@ def main(args):
                 if comment_method_interval_clean == "":
                     method["docstring"] = get_docstring_summary(strip_c_style_comment_delimiters(comments_above_close['content'])).strip()
                     success += 1
-        
+
         # save results
         snippet['function'] = []
         for method in methods:
-            if use_cover:
-                if method not in methods_covered:
-                    continue
-            else:
-                if method in methods_covered:
-                    continue
+            if (
+                use_cover
+                and method not in methods_covered
+                or not use_cover
+                and method in methods_covered
+            ):
+                continue
             snippet['function'].append({"function": method["content"], "docstring": method["docstring"]})
         function_comment_pairs.append(snippet)
     # with open(args.output_path, 'w') as outfile:

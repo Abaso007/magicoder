@@ -124,7 +124,7 @@ def generate(
 def preprocess_completion_prompt(prompt: str) -> tuple[str, str]:
     """Preprocess the DS-1000 prompt (Completion mode) into instruction and response prefix"""
     # hit = False
-    if not "SOLUTION START" in prompt:
+    if "SOLUTION START" not in prompt:
         answer_index = prompt.rindex("A:")
         answer = prompt[answer_index + 2 :].strip()
         instruction: str = prompt[:answer_index].strip()
@@ -132,7 +132,7 @@ def preprocess_completion_prompt(prompt: str) -> tuple[str, str]:
             instruction = instruction[len("Problem:") :].strip()
         if "### BEGIN SOLUTION" in prompt:
             assert prompt.count("<code>") == 1
-            assert prompt.count("</code>") == 0
+            assert "</code>" not in prompt
             lines = answer.splitlines(keepends=True)
             return_line, result_line, begin_line = lines[-3:]
             assert return_line.strip().startswith("# return")
@@ -153,24 +153,25 @@ def preprocess_completion_prompt(prompt: str) -> tuple[str, str]:
             block_end, instruction_line, begin_line, block_start = lines[-4:]
             assert begin_line.strip() == "BEGIN SOLUTION"
             assert block_start.strip() == "<code>"
-            if not block_end.strip() == "</code>":
-                if lines[-6].strip() == "</code>":
-                    response_prefix = lines[:-6]
-                    starting_lines = lines[-5:-2]
-                else:
-                    assert instruction_line.strip() == "</code>"
-                    response_prefix = lines[:-3]
-                    starting_lines = lines[-2:-2]
-            else:
+            if block_end.strip() == "</code>":
                 response_prefix = lines[:-4]
                 starting_lines = lines[-3:-2]
+            elif lines[-6].strip() == "</code>":
+                response_prefix = lines[:-6]
+                starting_lines = lines[-5:-2]
+            else:
+                assert instruction_line.strip() == "</code>"
+                response_prefix = lines[:-3]
+                starting_lines = lines[-2:-2]
             starting_lines = [f"# {line.lstrip()}" for line in starting_lines]
-            response = "".join([*response_prefix, *starting_lines]).strip()
-            response += "\n# Solution\n"
+            response = (
+                "".join([*response_prefix, *starting_lines]).strip()
+                + "\n# Solution\n"
+            )
     else:
         # hit = True
-        assert prompt.count("<code>") == 0
-        assert prompt.count("</code>") == 0
+        assert "<code>" not in prompt
+        assert "</code>" not in prompt
         assert prompt.strip().endswith("# SOLUTION START")
         code_prefix = prompt[: prompt.rindex("# SOLUTION START")].strip()
         instruction = f"""Write a solution to the following problem:

@@ -51,7 +51,7 @@ def map_mbpp_problem(p: dict) -> Text2CodeProblem:
 ```python
 {assertion}
 ```"""
-    response_prefix = f"""```python"""
+    response_prefix = """```python"""
     return Text2CodeProblem(
         id=str(id), instruction=instruction, response_prefix=response_prefix
     )

@@ -112,39 +112,39 @@ def main():
     model = INSTRUCTOR(f"hkunlp/{args.model_key}")
     dataset, embeddings = get_dataset_embeddings(args, args.instruction, model=model)
     if method == "cluster":
-        assert args.n_clusters is not None
-        kmeans = KMeans(n_clusters=args.n_clusters, random_state=42)
-        labels = kmeans.fit_predict(embeddings)
-        assert labels.max() == args.n_clusters - 1
-        assert labels.min() == 0
-        n_clusters = args.n_clusters
-        indices = {
-        label: np.where(labels == label)[0].tolist() for label in range(n_clusters)
-    }
-        tsne = TSNE(
-            n_components=2,
-            perplexity=100,
-            random_state=42,
-            init="random",
-            learning_rate=200,
-        )
-        vis_dims = tsne.fit_transform(embeddings)
-        xs = np.array([x for x, y in vis_dims])
-        ys = np.array([y for x, y in vis_dims])
-        for label in range(n_clusters):
-            indices_for_label = indices[label]
-            x = xs[indices_for_label]
-            y = ys[indices_for_label]
-            legend_label = (
-                f"Cluster {label + 1}" if method == "cluster" else args.queries[label]
+            assert args.n_clusters is not None
+            kmeans = KMeans(n_clusters=args.n_clusters, random_state=42)
+            labels = kmeans.fit_predict(embeddings)
+            assert labels.max() == args.n_clusters - 1
+            assert labels.min() == 0
+            n_clusters = args.n_clusters
+            indices = {
+            label: np.where(labels == label)[0].tolist() for label in range(n_clusters)
+        }
+            tsne = TSNE(
+                n_components=2,
+                perplexity=100,
+                random_state=42,
+                init="random",
+                learning_rate=200,
             )
-            plt.scatter(x, y, label=legend_label)
-            avg_x = xs.mean()
-            avg_y = ys.mean()
-            plt.scatter(avg_x, avg_y, marker="x", s=100)
-        plt.legend()
-        plt.title("Visualization of Clusters")
-        plt.savefig("Clusters.png")
+            vis_dims = tsne.fit_transform(embeddings)
+            xs = np.array([x for x, y in vis_dims])
+            ys = np.array([y for x, y in vis_dims])
+            for label in range(n_clusters):
+                indices_for_label = indices[label]
+                x = xs[indices_for_label]
+                y = ys[indices_for_label]
+                legend_label = (
+                    f"Cluster {label + 1}" if method == "cluster" else args.queries[label]
+                )
+                plt.scatter(x, y, label=legend_label)
+                avg_x = xs.mean()
+                avg_y = ys.mean()
+                plt.scatter(avg_x, avg_y, marker="x", s=100)
+            plt.legend()
+            plt.title("Visualization of Clusters")
+            plt.savefig("Clusters.png")
     else:
         assert method == "query"
         queries = [[args.query_instruction, query] for query in args.queries]
@@ -165,8 +165,8 @@ def main():
         # query_labels = [query[1].split()[0] for query in queries]
         query_labels = [query[1] for query in queries]
         label_counts = Counter(labels)
-        categories = [query_labels[label] for label in label_counts.keys()]
-        counts = list(label_counts.values())     
+        categories = [query_labels[label] for label in label_counts]
+        counts = list(label_counts.values())
         colors = plt.cm.tab10(np.random.permutation(np.linspace(0, 1, len(categories))))
         colors = [
             "Tomato", "Coral", "Orange", "Gold", "YellowGreen", "MediumSeaGreen", "MediumTurquoise","LightSeaGreen",
@@ -190,13 +190,14 @@ def main():
 
         explode = [0.02] * len(counts)
         fig, ax = plt.subplots(figsize=(13.5, 3))
-        
+
         def calc_angle(percent):
             return 140 - (percent * 3.6) / 2
-        saturation_factor = 0.55 
-        brightness_factor = 0.85  
+
+        saturation_factor = 0.55
+        brightness_factor = 0.85
         modified_colors = [adjust_saturation_and_brightness(color, saturation_factor, brightness_factor) for color in selected_colors]
-       
+
         wedges, texts = ax.pie(counts, colors=modified_colors, explode=explode,startangle=140, wedgeprops={'width': 0.65, 'edgecolor': 'w'})
         for i, p in enumerate(wedges):
             angle = (p.theta2 + p.theta1) / 2
@@ -211,10 +212,7 @@ def main():
             label = " ".join(label_words)
             value = "{:.1f}\%".format(counts[i] / sum(counts) * 100) 
 
-            if x>0:
-                label_and_value = f" ({value}) "+label 
-            else:
-                label_and_value = label + f" ({value})"
+            label_and_value = f" ({value}) {label}" if x>0 else f"{label} ({value})"
             angle_B=-120*np.sign(x)*np.sign(y)
             xytext = (1.1 * np.sign(x), 1.3*y)
             ax.annotate(label_and_value, xy=(x, y), xytext=xytext, 

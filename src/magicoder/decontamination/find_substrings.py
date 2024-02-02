@@ -97,10 +97,7 @@ def find_substrings(data, columns, filter_out, return_matched=False):
                     return False, benchmark_name_to_filter_reason(benchmark)
 
     # Return True, None if none of the substrings was found
-    if return_matched:
-        return True, None, None
-    else:
-        return True, None
+    return (True, None, None) if return_matched else (True, None)
 
 
 def aggregate_meta(tmp_meta_dir: str):
@@ -211,7 +208,7 @@ class SubstringFilterer(object):
         features = batch.keys()
         res = {k: [] for k in features}
         for sample in zip(*[batch[k] for k in features]):
-            sample = {k: v for k, v in zip(features, sample)}
+            sample = dict(zip(features, sample))
             should_include, filter_reason, matched_substring = self._filter_file(sample)
             if not should_include:
                 meta.update(sample.get(LANGUAGE_COL, "unknown"), filter_reason)

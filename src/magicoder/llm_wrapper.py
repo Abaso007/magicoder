@@ -61,8 +61,7 @@ class TokenizationContext:
         # TODO: check if tokenizers cannot be loaded with path
         model_name_or_path = model_key
         tokenizer = AutoTokenizer.from_pretrained(model_name_or_path, use_fast=use_fast)
-        tokenization_context = TokenizationContext.from_tokenizer(tokenizer)
-        return tokenization_context
+        return TokenizationContext.from_tokenizer(tokenizer)
 
     @staticmethod
     def from_tokenizer(tokenizer: PreTrainedTokenizer) -> "TokenizationContext":
@@ -102,7 +101,7 @@ class TokenizationContext:
         eos_token_ids = (
             [eos_token_id] if config.add_eos and eos_token_id is not None else []
         )
-        if len(bos_token_ids) > 0 or len(eos_token_ids) > 0:
+        if bos_token_ids or eos_token_ids:
             input_ids = [
                 bos_token_ids + input_id + eos_token_ids for input_id in input_ids
             ]
@@ -426,8 +425,7 @@ def form_starcoder_infill(prefix: str, suffix: str) -> str:
     FIM_PREFIX = "<fim_prefix>"
     FIM_MIDDLE = "<fim_middle>"
     FIM_SUFFIX = "<fim_suffix>"
-    prompt = f"{FIM_PREFIX}{prefix}{FIM_SUFFIX}{suffix}{FIM_MIDDLE}"
-    return prompt
+    return f"{FIM_PREFIX}{prefix}{FIM_SUFFIX}{suffix}{FIM_MIDDLE}"
 
 
 def form_codellama_infill(prefix: str, suffix: str) -> str:
@@ -462,7 +460,7 @@ def create_infilling_prompt(
         return form_starcoder_infill(prefix, suffix)
     elif (
         model_key in SupportedModelKeys.codellama_based_models()
-        and not "python" in model_key.lower()
+        and "python" not in model_key.lower()
     ):
         return form_codellama_infill(prefix, suffix)
     elif model_key in SupportedModelKeys.deepseekcoder_based_models():
